@@ -78,12 +78,19 @@ export const gameRouter = router({
         difficulty: "medium",
       };
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       console.error(`[getDailyColor] Fatal error:`, {
         dateString,
-        error: error instanceof Error ? error.message : String(error),
+        error: errorMessage,
         stack: error instanceof Error ? error.stack : undefined,
       });
-      throw new Error(`Failed to get daily color: ${error instanceof Error ? error.message : String(error)}`);
+
+      // Check if this is a missing table error
+      if (errorMessage.includes('relation') || errorMessage.includes('does not exist') || errorMessage.includes('Failed query')) {
+        throw new Error(`Database not initialized. Please run migrations: pnpm drizzle-kit push`);
+      }
+
+      throw new Error(`Failed to get daily color: ${errorMessage}`);
     }
   }),
 
