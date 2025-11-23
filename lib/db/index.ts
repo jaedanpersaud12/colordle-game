@@ -19,6 +19,8 @@ function getClient() {
       idle_timeout: 20,
       connect_timeout: 10,
       prepare: false, // Disable prepared statements for serverless
+      onnotice: () => {}, // Suppress notices
+      fetch_types: false, // Disable type fetching for faster connections
     });
   }
   return client;

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { router, publicProcedure, protectedProcedure } from "../init";
 import { gameScores, dailyColors, users } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import { loadColors } from "@/lib/colors";
 import {
   getTodayDateString,
@@ -19,19 +19,19 @@ export const gameRouter = router({
       // Check if we already have a color for today
       console.log(`[getDailyColor] Querying database...`);
 
-      // Use raw SQL to avoid prepared statement issues in serverless
-      const result = await ctx.db.execute(
-        `SELECT * FROM daily_colors WHERE game_date = '${dateString}' LIMIT 1`
-      );
-
-      const existingColor = result[0] as any;
+      // Query using Drizzle's query builder (respects prepare: false setting)
+      const [existingColor] = await ctx.db
+        .select()
+        .from(dailyColors)
+        .where(eq(dailyColors.gameDate, dateString))
+        .limit(1);
 
       if (existingColor) {
-        console.log(`[getDailyColor] Found existing color for ${dateString}: ${existingColor.color_name}`);
+        console.log(`[getDailyColor] Found existing color for ${dateString}: ${existingColor.colorName}`);
         return {
-          dayNumber: existingColor.day_number,
-          colorName: existingColor.color_name,
-          colorHex: existingColor.color_hex,
+          dayNumber: existingColor.dayNumber,
+          colorName: existingColor.colorName,
+          colorHex: existingColor.colorHex,
           gameDate: dateString,
           difficulty: existingColor.difficulty,
         };
