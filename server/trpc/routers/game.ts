@@ -24,7 +24,7 @@ export const gameRouter = router({
         `SELECT * FROM daily_colors WHERE game_date = '${dateString}' LIMIT 1`
       );
 
-      const existingColor = result.rows[0] as any;
+      const existingColor = result[0] as any;
 
       if (existingColor) {
         console.log(`[getDailyColor] Found existing color for ${dateString}: ${existingColor.color_name}`);
