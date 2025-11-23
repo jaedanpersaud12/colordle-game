@@ -15,9 +15,10 @@ interface ColorInputProps {
   colors: Color[];
   onGuess: (color: Color) => void;
   disabled: boolean;
+  guessedColors: Color[];
 }
 
-export function ColorInput({ colors, onGuess, disabled }: ColorInputProps) {
+export function ColorInput({ colors, onGuess, disabled, guessedColors }: ColorInputProps) {
   const [input, setInput] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -25,24 +26,35 @@ export function ColorInput({ colors, onGuess, disabled }: ColorInputProps) {
   // Defer the input value for expensive filtering operations
   const deferredInput = useDeferredValue(input);
 
+  // Create a set of guessed color hex values for fast lookup
+  const guessedHexes = useMemo(
+    () => new Set(guessedColors.map((c) => c.hex.toLowerCase())),
+    [guessedColors]
+  );
+
   const filteredColors = useMemo(() => {
     if (!deferredInput.trim()) return [];
     const searchTerm = deferredInput.toLowerCase();
 
+    // Filter out already guessed colors
+    const availableColors = colors.filter(
+      (color) => !guessedHexes.has(color.hex.toLowerCase())
+    );
+
     // Fast path: check if search starts with the term (most common case)
-    const startsWithResults = colors.filter((color) =>
+    const startsWithResults = availableColors.filter((color) =>
       color.name.toLowerCase().startsWith(searchTerm)
     );
 
     // Otherwise, include colors that contain the term
-    const containsResults = colors.filter(
+    const containsResults = availableColors.filter(
       (color) =>
         color.name.toLowerCase().includes(searchTerm) &&
         !color.name.toLowerCase().startsWith(searchTerm)
     );
 
     return [...startsWithResults, ...containsResults];
-  }, [deferredInput, colors]);
+  }, [deferredInput, colors, guessedHexes]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

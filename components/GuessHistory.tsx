@@ -50,7 +50,12 @@ export function GuessHistory({ guesses }: GuessHistoryProps) {
                 <p className="text-xs sm:text-sm text-muted-foreground font-mono mt-0.5 truncate">
                   {guess.color.hex}
                 </p>
-                {guess.similarity >= 95 && (
+                {guess.similarity === 100 && (
+                  <p className="text-xs font-medium text-green-600 dark:text-green-400 mt-1">
+                    🎉 Perfect match!
+                  </p>
+                )}
+                {guess.similarity >= 95 && guess.similarity < 100 && (
                   <p className="text-xs font-medium text-green-600 dark:text-green-400 mt-1">
                     🔥 Very close!
                   </p>

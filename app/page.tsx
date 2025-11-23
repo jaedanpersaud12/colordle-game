@@ -40,6 +40,24 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Lightbulb, Flag } from "lucide-react";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
+
+// Cookie helper functions
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+  return null;
+}
+
+function setCookie(name: string, value: string, days: number = 365) {
+  if (typeof document === 'undefined') return;
+  const expires = new Date();
+  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+  document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+}
 
 export default function Home() {
   const [colors, setColors] = useState<Color[]>([]);
@@ -49,6 +67,8 @@ export default function Home() {
   const [showTarget, setShowTarget] = useState(false);
   const [hintEnabled, setHintEnabled] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
+  const [helpDialogOpen, setHelpDialogOpen] = useState(false);
+  const [statsDialogOpen, setStatsDialogOpen] = useState(false);
 
   const supabase = createClient();
   const utils = trpc.useUtils();
@@ -107,6 +127,12 @@ export default function Home() {
 
       // Clear old game states from localStorage
       clearOldGameStates();
+
+      // Check if this is the user's first time visiting
+      const hasSeenHelp = getCookie('colordle_seen_help');
+      if (!hasSeenHelp) {
+        setHelpDialogOpen(true);
+      }
 
       setIsLoading(false);
     }
@@ -329,14 +355,20 @@ export default function Home() {
   const showHint = gameState.guesses.length >= 3;
 
   return (
-    <main className="h-screen overflow-hidden flex flex-col bg-background">
+    <SidebarProvider defaultOpen={false}>
+      <AppSidebar
+        onHelpClick={() => setHelpDialogOpen(true)}
+        onStatsClick={() => setStatsDialogOpen(true)}
+        onSignInClick={handleSignInClick}
+      />
+      <main className="h-screen overflow-hidden flex flex-col bg-background w-full">
       {/* Header */}
-      <header className="border-b border-border px-6 py-4 flex-shrink-0">
-        <div className="mx-auto flex items-center justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-3">
+      <header className="border-b border-border px-4 sm:px-6 py-3 sm:py-4 flex-shrink-0">
+        <div className="mx-auto flex items-center justify-between gap-2 sm:gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
               <h1
-                className="text-3xl font-bold tracking-tight colordle-title"
+                className="text-xl sm:text-3xl font-bold tracking-tight colordle-title flex-shrink-0"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
                 {"Colordle".split("").map((letter, i) => (
@@ -350,11 +382,11 @@ export default function Home() {
               </h1>
               {dailyColorData && (
                 <>
-                  <span className="px-2.5 py-1 text-xs font-bold uppercase tracking-wide border text-foreground bg-muted border-border">
+                  <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wide border text-foreground bg-muted border-border whitespace-nowrap">
                     Day {dailyColorData.dayNumber}
                   </span>
                   <span
-                    className={`px-2.5 py-1 text-xs font-bold uppercase tracking-wide border ${getDifficultyColor(
+                    className={`px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wide border whitespace-nowrap ${getDifficultyColor(
                       dailyColorData.difficulty
                     )}`}
                   >
@@ -364,38 +396,58 @@ export default function Home() {
               )}
             </div>
             {debugMode && gameState.targetColor && (
-              <p className="text-xs font-mono text-yellow-600 dark:text-yellow-500 mt-1">
+              <p className="text-xs font-mono text-yellow-600 dark:text-yellow-500 mt-1 truncate">
                 DEBUG: {gameState.targetColor.name} ({gameState.targetColor.hex}
                 )
               </p>
             )}
           </div>
-          <div className="flex gap-2">
-            <UserMenu onSignInClick={handleSignInClick} />
-            <HelpDialog />
-            <StatsDialog stats={stats} />
+          <div className="flex gap-1 sm:gap-2 flex-shrink-0">
+            {/* Mobile menu trigger */}
+            <SidebarTrigger />
+
+            {/* Desktop menu buttons */}
+            <div className="hidden md:flex gap-1 sm:gap-2">
+              <UserMenu onSignInClick={handleSignInClick} />
+              <HelpDialog
+                open={helpDialogOpen}
+                onOpenChange={(open) => {
+                  setHelpDialogOpen(open);
+                  // Set cookie when dialog is closed
+                  if (!open) {
+                    setCookie('colordle_seen_help', 'true');
+                  }
+                }}
+              />
+              <StatsDialog
+                stats={stats}
+                open={statsDialogOpen}
+                onOpenChange={setStatsDialogOpen}
+              />
+            </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-hidden flex flex-col max-w-5xl mx-auto w-full px-6 py-4 gap-4">
+      <div className="flex-1 overflow-hidden flex flex-col max-w-5xl mx-auto w-full px-4 sm:px-6 py-3 sm:py-4 gap-3 sm:gap-4">
         {/* Search Input */}
         <div className="flex-shrink-0">
           <ColorInput
             colors={colors}
             onGuess={handleGuess}
             disabled={gameState.isComplete}
+            guessedColors={gameState.guesses.map((g) => g.color)}
           />
         </div>
 
         {/* Game Info Bar */}
         <div className="flex-shrink-0 flex items-center justify-between">
           <div className="text-sm font-semibold">
-            <span className="text-2xl font-black">{gameState.attempts}</span>
-            <span className="text-muted-foreground ml-2">guesses</span>
+            <span className="text-xl sm:text-2xl font-black">{gameState.attempts}</span>
+            <span className="text-muted-foreground ml-1 sm:ml-2">guesses</span>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1 sm:gap-2">
             {showHint && (
               <Button
                 onClick={() => setHintEnabled(!hintEnabled)}
@@ -447,27 +499,27 @@ export default function Home() {
           open={showHint && hintEnabled}
           onOpenChange={() => setHintEnabled(false)}
         >
-          <DialogContent className="max-w-md">
-            <DialogHeader className="border-b border-border pb-4">
-              <DialogTitle>Color Hint</DialogTitle>
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogHeader className="border-b border-border pb-3 sm:pb-4">
+              <DialogTitle className="text-xl sm:text-2xl">Color Hint</DialogTitle>
             </DialogHeader>
             <div>
               {targetHsl && (
-                <div className="space-y-8 py-6">
+                <div className="space-y-5 sm:space-y-8 py-4 sm:py-6">
                   {/* Hue */}
-                  <div className="space-y-3">
+                  <div className="space-y-2 sm:space-y-3">
                     <div className="flex items-baseline justify-between">
-                      <span className="text-base font-black uppercase tracking-wide">
+                      <span className="text-sm sm:text-base font-black uppercase tracking-wide">
                         Hue
                       </span>
-                      <span className="text-3xl font-black tabular-nums">
+                      <span className="text-2xl sm:text-3xl font-black tabular-nums">
                         {Math.round(targetHsl.h)}
-                        <span className="text-base text-muted-foreground font-bold">
+                        <span className="text-sm sm:text-base text-muted-foreground font-bold">
                           °
                         </span>
                       </span>
                     </div>
-                    <div className="relative h-12 border border-border shadow-sm">
+                    <div className="relative h-10 sm:h-12 border border-border shadow-sm">
                       <div
                         className="absolute inset-0"
                         style={{
@@ -486,19 +538,19 @@ export default function Home() {
                   </div>
 
                   {/* Saturation */}
-                  <div className="space-y-3">
+                  <div className="space-y-2 sm:space-y-3">
                     <div className="flex items-baseline justify-between">
-                      <span className="text-base font-black uppercase tracking-wide">
+                      <span className="text-sm sm:text-base font-black uppercase tracking-wide">
                         Saturation
                       </span>
-                      <span className="text-3xl font-black tabular-nums">
+                      <span className="text-2xl sm:text-3xl font-black tabular-nums">
                         {Math.round(targetHsl.s)}
-                        <span className="text-base text-muted-foreground font-bold">
+                        <span className="text-sm sm:text-base text-muted-foreground font-bold">
                           %
                         </span>
                       </span>
                     </div>
-                    <div className="relative h-12 border border-border shadow-sm">
+                    <div className="relative h-10 sm:h-12 border border-border shadow-sm">
                       <div
                         className="absolute inset-0"
                         style={{
@@ -516,19 +568,19 @@ export default function Home() {
                   </div>
 
                   {/* Lightness */}
-                  <div className="space-y-3">
+                  <div className="space-y-2 sm:space-y-3">
                     <div className="flex items-baseline justify-between">
-                      <span className="text-base font-black uppercase tracking-wide">
+                      <span className="text-sm sm:text-base font-black uppercase tracking-wide">
                         Lightness
                       </span>
-                      <span className="text-3xl font-black tabular-nums">
+                      <span className="text-2xl sm:text-3xl font-black tabular-nums">
                         {Math.round(targetHsl.l)}
-                        <span className="text-base text-muted-foreground font-bold">
+                        <span className="text-sm sm:text-base text-muted-foreground font-bold">
                           %
                         </span>
                       </span>
                     </div>
-                    <div className="relative h-12 border border-border shadow-sm">
+                    <div className="relative h-10 sm:h-12 border border-border shadow-sm">
                       <div
                         className="absolute inset-0"
                         style={{
@@ -552,17 +604,17 @@ export default function Home() {
 
         {/* Win/Complete State */}
         {showTarget && gameState.targetColor && (
-          <div className="flex-shrink-0 p-6 bg-card border border-border">
-            <div className="flex items-center gap-6">
+          <div className="flex-shrink-0 p-4 sm:p-6 bg-card border border-border">
+            <div className="flex items-center gap-4 sm:gap-6">
               <div
-                className="w-32 h-32 border border-border shadow-lg flex-shrink-0"
+                className="w-20 h-20 sm:w-32 sm:h-32 border border-border shadow-lg flex-shrink-0"
                 style={{ backgroundColor: gameState.targetColor.hex }}
               />
-              <div className="flex-1">
-                <p className="text-2xl font-black">
+              <div className="flex-1 min-w-0">
+                <p className="text-lg sm:text-2xl font-black truncate">
                   {gameState.targetColor.name}
                 </p>
-                <p className="text-base text-muted-foreground font-mono mt-1">
+                <p className="text-sm sm:text-base text-muted-foreground font-mono mt-1 truncate">
                   {gameState.targetColor.hex}
                 </p>
                 {gameState.guesses.some((g) => g.similarity === 100) ? (
@@ -595,6 +647,25 @@ export default function Home() {
           <GuessHistory guesses={gameState.guesses} />
         </div>
       </div>
+
+      {/* Mobile dialogs - controlled by sidebar */}
+      <div className="md:hidden">
+        <HelpDialog
+          open={helpDialogOpen}
+          onOpenChange={(open) => {
+            setHelpDialogOpen(open);
+            if (!open) {
+              setCookie('colordle_seen_help', 'true');
+            }
+          }}
+        />
+        <StatsDialog
+          stats={stats}
+          open={statsDialogOpen}
+          onOpenChange={setStatsDialogOpen}
+        />
+      </div>
     </main>
+    </SidebarProvider>
   );
 }
