@@ -19,26 +19,20 @@ export const gameRouter = router({
       // Check if we already have a color for today
       console.log(`[getDailyColor] Querying database...`);
 
-      // Add timeout to prevent hanging
-      const queryPromise = ctx.db
-        .select()
-        .from(dailyColors)
-        .where(eq(dailyColors.gameDate, dateString))
-        .limit(1);
-
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Database query timeout after 10s')), 10000)
+      // Use raw SQL to avoid prepared statement issues in serverless
+      const result = await ctx.db.execute(
+        `SELECT * FROM daily_colors WHERE game_date = '${dateString}' LIMIT 1`
       );
 
-      const [existingColor] = await Promise.race([queryPromise, timeoutPromise]) as any;
+      const existingColor = result.rows[0] as any;
 
       if (existingColor) {
-        console.log(`[getDailyColor] Found existing color for ${dateString}: ${existingColor.colorName}`);
+        console.log(`[getDailyColor] Found existing color for ${dateString}: ${existingColor.color_name}`);
         return {
-          dayNumber: existingColor.dayNumber,
-          colorName: existingColor.colorName,
-          colorHex: existingColor.colorHex,
-          gameDate: existingColor.gameDate,
+          dayNumber: existingColor.day_number,
+          colorName: existingColor.color_name,
+          colorHex: existingColor.color_hex,
+          gameDate: dateString,
           difficulty: existingColor.difficulty,
         };
       }
