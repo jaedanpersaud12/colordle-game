@@ -14,25 +14,67 @@ export const gameRouter = router({
   getDailyColor: publicProcedure.query(async ({ ctx }) => {
     const dateString = getTodayDateString();
 
-    // Check if we already have a color for today
-    const [existingColor] = await ctx.db
-      .select()
-      .from(dailyColors)
-      .where(eq(dailyColors.gameDate, dateString))
-      .limit(1);
+    try {
+      // Check if we already have a color for today
+      const [existingColor] = await ctx.db
+        .select()
+        .from(dailyColors)
+        .where(eq(dailyColors.gameDate, dateString))
+        .limit(1);
 
-    if (existingColor) {
+      if (existingColor) {
+        console.log(`[getDailyColor] Found existing color for ${dateString}: ${existingColor.colorName}`);
+        return {
+          dayNumber: existingColor.dayNumber,
+          colorName: existingColor.colorName,
+          colorHex: existingColor.colorHex,
+          gameDate: existingColor.gameDate,
+          difficulty: existingColor.difficulty,
+        };
+      }
+
+      // If no color exists for today, generate one on-the-fly
+      console.warn(`[getDailyColor] No color found in DB for ${dateString}, generating fallback`);
+
+      const colors = await loadColors();
+      console.log(`[getDailyColor] Loaded ${colors.length} colors`);
+
+      const daysSinceEpoch = getSeedFromDate(dateString);
+      console.log(`[getDailyColor] Days since epoch: ${daysSinceEpoch}`);
+
+      const selectedColor = getDailyColorForDate(colors, dateString);
+      console.log(`[getDailyColor] Selected color: ${selectedColor.name} (${selectedColor.hex})`);
+
+      // Try to insert it into the database for next time
+      try {
+        await ctx.db.insert(dailyColors).values({
+          gameDate: dateString,
+          dayNumber: daysSinceEpoch + 1,
+          colorName: selectedColor.name,
+          colorHex: selectedColor.hex,
+          seed: daysSinceEpoch,
+          difficulty: "medium", // Default difficulty for auto-generated
+        });
+        console.log(`[getDailyColor] Successfully inserted color into DB`);
+      } catch (insertError) {
+        console.error(`[getDailyColor] Failed to insert color into DB:`, insertError);
+      }
+
       return {
-        dayNumber: existingColor.dayNumber,
-        colorName: existingColor.colorName,
-        colorHex: existingColor.colorHex,
-        gameDate: existingColor.gameDate,
-        difficulty: existingColor.difficulty,
+        dayNumber: daysSinceEpoch + 1,
+        colorName: selectedColor.name,
+        colorHex: selectedColor.hex,
+        gameDate: dateString,
+        difficulty: "medium",
       };
+    } catch (error) {
+      console.error(`[getDailyColor] Fatal error:`, {
+        dateString,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      throw new Error(`Failed to get daily color: ${error instanceof Error ? error.message : String(error)}`);
     }
-
-    // If no color exists, return an error (should be seeded beforehand)
-    throw new Error(`No daily color found for ${dateString}. Please run the seed script.`);
   }),
 
   // Submit or update a game score (protected - requires auth)
