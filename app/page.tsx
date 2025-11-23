@@ -14,12 +14,18 @@ import {
   loadGameStats,
   saveGameStats,
   updateStatsOnWin,
-  getDailyColor,
+  loadDailyGameState,
+  saveDailyGameState,
+  clearOldGameStates,
+  getTodayDateString,
 } from "@/lib/game";
+import { trpc } from "@/lib/trpc/client";
+import { createClient } from "@/lib/supabase/client";
 import { ColorInput } from "@/components/ColorInput";
 import { GuessHistory } from "@/components/GuessHistory";
 import { HelpDialog } from "@/components/HelpDialog";
 import { StatsDialog } from "@/components/StatsDialog";
+import { UserMenu } from "@/components/UserMenu";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -28,12 +34,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalTitle,
-  ModalBody,
-} from "@/components/ui/modal";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Lightbulb, Flag } from "lucide-react";
 
 export default function Home() {
@@ -45,22 +50,158 @@ export default function Home() {
   const [hintEnabled, setHintEnabled] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
 
+  const supabase = createClient();
+  const utils = trpc.useUtils();
+
+  // Fetch daily color using tRPC hook
+  const { data: dailyColorData } = trpc.game.getDailyColor.useQuery();
+
+  // Fetch today's game state from backend (if user is logged in)
+  const { data: backendGameState } = trpc.game.getTodayGameState.useQuery(
+    undefined,
+    {
+      retry: false,
+    }
+  );
+
+  // Mutation for submitting scores
+  const submitScoreMutation = trpc.game.submitScore.useMutation();
+
+  // Save game state before user signs in
+  const handleSignInClick = () => {
+    if (dailyColorData && gameState.guesses.length > 0) {
+      // Save current game state to a special key for post-onboarding restoration
+      localStorage.setItem(
+        "pre-auth-game-state",
+        JSON.stringify({
+          gameDate: dailyColorData.gameDate,
+          targetColor: gameState.targetColor,
+          guesses: gameState.guesses,
+          isComplete: gameState.isComplete,
+          attempts: gameState.attempts,
+          won: gameState.guesses.some((g) => g.similarity === 100),
+          gaveUp: false,
+        })
+      );
+    }
+  };
+
+  // Listen for auth changes and refetch game state when user logs in
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        // Refetch backend game state when user signs in
+        utils.game.getTodayGameState.invalidate();
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase.auth, utils.game.getTodayGameState]);
+
   useEffect(() => {
     async function initGame() {
       const loadedColors = await loadColors();
       setColors(loadedColors);
 
-      const dailyColor = getDailyColor(loadedColors);
-      setGameState((prev) => ({
-        ...prev,
-        targetColor: dailyColor,
-      }));
+      // Clear old game states from localStorage
+      clearOldGameStates();
 
       setIsLoading(false);
     }
 
     initGame();
   }, []);
+
+  // Set target color and load saved game state when daily color data is loaded
+  useEffect(() => {
+    if (dailyColorData) {
+      const dailyColor: Color = {
+        name: dailyColorData.colorName,
+        hex: dailyColorData.colorHex,
+        goodName: true, // Colors from DB are curated
+      };
+
+      const today = getTodayDateString();
+
+      // Priority 1: Try to load from backend (if user is logged in)
+      if (backendGameState && backendGameState.guesses) {
+        const guesses = (backendGameState.guesses as any[]).map((g: any) => ({
+          color: {
+            name: g.colorName,
+            hex: g.colorHex,
+            goodName: true,
+          },
+          similarity: g.similarity,
+          timestamp: new Date(g.timestamp),
+        }));
+
+        const restoredState = {
+          targetColor: dailyColor,
+          guesses,
+          isComplete: backendGameState.won || backendGameState.gaveUp,
+          attempts: backendGameState.attempts,
+        };
+
+        setGameState(restoredState);
+
+        // Save to localStorage for offline access
+        saveDailyGameState({
+          gameDate: today,
+          targetColor: dailyColor,
+          guesses,
+          isComplete: backendGameState.won || backendGameState.gaveUp,
+          attempts: backendGameState.attempts,
+          won: backendGameState.won,
+          gaveUp: backendGameState.gaveUp,
+        });
+
+        // If game was already complete, show the target
+        if (backendGameState.won || backendGameState.gaveUp) {
+          setShowTarget(true);
+        }
+      }
+      // Priority 2: Try to load saved game state from localStorage
+      else {
+        const savedState = loadDailyGameState(today);
+
+        if (savedState && savedState.targetColor.hex === dailyColor.hex) {
+          // Restore saved game state
+          setGameState({
+            targetColor: dailyColor,
+            guesses: savedState.guesses,
+            isComplete: savedState.isComplete,
+            attempts: savedState.attempts,
+          });
+
+          // If game was already complete, show the target
+          if (savedState.isComplete) {
+            setShowTarget(true);
+          }
+        } else {
+          // Start new game
+          setGameState((prev) => ({
+            ...prev,
+            targetColor: dailyColor,
+          }));
+        }
+      }
+    }
+  }, [dailyColorData, backendGameState]);
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case "easy":
+        return "text-green-600 dark:text-green-500 bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700";
+      case "medium":
+        return "text-yellow-600 dark:text-yellow-500 bg-yellow-100 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-700";
+      case "hard":
+        return "text-red-600 dark:text-red-500 bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700";
+      default:
+        return "text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600";
+    }
+  };
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -88,16 +229,48 @@ export default function Home() {
 
     const newGuesses = [...gameState.guesses, newGuess];
     const isWin = similarity === 100;
+    const newAttempts = gameState.attempts + 1;
 
-    setGameState({
+    const newGameState = {
       ...gameState,
       guesses: newGuesses,
-      attempts: gameState.attempts + 1,
+      attempts: newAttempts,
       isComplete: isWin,
-    });
+    };
+
+    setGameState(newGameState);
+
+    // Save to localStorage
+    if (dailyColorData && gameState.targetColor) {
+      saveDailyGameState({
+        gameDate: dailyColorData.gameDate,
+        targetColor: gameState.targetColor,
+        guesses: newGuesses,
+        isComplete: isWin,
+        attempts: newAttempts,
+        won: isWin,
+        gaveUp: false,
+      });
+
+      // Sync to backend
+      submitScoreMutation.mutate({
+        gameDate: dailyColorData.gameDate,
+        colorName: gameState.targetColor.name,
+        colorHex: gameState.targetColor.hex,
+        attempts: newAttempts,
+        won: isWin,
+        gaveUp: false,
+        guesses: newGuesses.map((g) => ({
+          colorName: g.color.name,
+          colorHex: g.color.hex,
+          similarity: g.similarity,
+          timestamp: g.timestamp.toISOString(),
+        })),
+      });
+    }
 
     if (isWin) {
-      const newStats = updateStatsOnWin(stats, gameState.attempts + 1);
+      const newStats = updateStatsOnWin(stats, newAttempts);
       setStats(newStats);
       saveGameStats(newStats);
       setShowTarget(true);
@@ -105,14 +278,44 @@ export default function Home() {
   };
 
   const handleGiveUp = () => {
-    setGameState({
+    const newGameState = {
       ...gameState,
       isComplete: true,
-    });
+    };
+
+    setGameState(newGameState);
     setShowTarget(true);
+
+    // Save to localStorage and sync to backend
+    if (dailyColorData && gameState.targetColor) {
+      saveDailyGameState({
+        gameDate: dailyColorData.gameDate,
+        targetColor: gameState.targetColor,
+        guesses: gameState.guesses,
+        isComplete: true,
+        attempts: gameState.attempts,
+        won: false,
+        gaveUp: true,
+      });
+
+      submitScoreMutation.mutate({
+        gameDate: dailyColorData.gameDate,
+        colorName: gameState.targetColor.name,
+        colorHex: gameState.targetColor.hex,
+        attempts: gameState.attempts,
+        won: false,
+        gaveUp: true,
+        guesses: gameState.guesses.map((g) => ({
+          colorName: g.color.name,
+          colorHex: g.color.hex,
+          similarity: g.similarity,
+          timestamp: g.timestamp.toISOString(),
+        })),
+      });
+    }
   };
 
-  if (isLoading) {
+  if (isLoading || !dailyColorData) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-lg">Loading colors...</p>
@@ -129,9 +332,37 @@ export default function Home() {
     <main className="h-screen overflow-hidden flex flex-col bg-background">
       {/* Header */}
       <header className="border-b border-border px-6 py-4 flex-shrink-0">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
+        <div className="mx-auto flex items-center justify-between">
           <div className="flex-1">
-            <h1 className="text-3xl font-black tracking-tight">Colordle</h1>
+            <div className="flex items-center gap-3">
+              <h1
+                className="text-3xl font-bold tracking-tight colordle-title"
+                style={{ fontFamily: "var(--font-heading)" }}
+              >
+                {"Colordle".split("").map((letter, i) => (
+                  <span
+                    key={i}
+                    className={`colordle-letter colordle-letter-${i}`}
+                  >
+                    {letter}
+                  </span>
+                ))}
+              </h1>
+              {dailyColorData && (
+                <>
+                  <span className="px-2.5 py-1 text-xs font-bold uppercase tracking-wide border text-foreground bg-muted border-border">
+                    Day {dailyColorData.dayNumber}
+                  </span>
+                  <span
+                    className={`px-2.5 py-1 text-xs font-bold uppercase tracking-wide border ${getDifficultyColor(
+                      dailyColorData.difficulty
+                    )}`}
+                  >
+                    {dailyColorData.difficulty}
+                  </span>
+                </>
+              )}
+            </div>
             {debugMode && gameState.targetColor && (
               <p className="text-xs font-mono text-yellow-600 dark:text-yellow-500 mt-1">
                 DEBUG: {gameState.targetColor.name} ({gameState.targetColor.hex}
@@ -140,6 +371,7 @@ export default function Home() {
             )}
           </div>
           <div className="flex gap-2">
+            <UserMenu onSignInClick={handleSignInClick} />
             <HelpDialog />
             <StatsDialog stats={stats} />
           </div>
@@ -178,8 +410,8 @@ export default function Home() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
-                    variant="outline"
-                    className="bg-red-600 text-white hover:text-white hover:bg-red-500 hover:opacity-90"
+                    variant="ghost"
+                    className="bg-red-600 text-white hover:text-white hover:bg-red-500 hover:opacity-90 border-0"
                     size="icon-sm"
                     title="Give up"
                   >
@@ -187,7 +419,10 @@ export default function Home() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 p-0">
-                  <div className="px-4 py-3 text-center text-sm font-semibold border-b">
+                  <div
+                    className="px-4 py-3 text-center text-lg font-bold border-b"
+                    style={{ fontFamily: "var(--font-heading)" }}
+                  >
                     Give up?
                   </div>
                   <div className="grid grid-cols-2 gap-0">
@@ -208,30 +443,44 @@ export default function Home() {
         </div>
 
         {/* Color Hint Modal */}
-        <Modal isOpen={showHint && hintEnabled} onOpenChange={() => setHintEnabled(false)}>
-          <ModalContent size="md" closeButton={true}>
-            <ModalHeader>
-              <ModalTitle>Color Hint</ModalTitle>
-            </ModalHeader>
-            <ModalBody>
+        <Dialog
+          open={showHint && hintEnabled}
+          onOpenChange={() => setHintEnabled(false)}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader className="border-b border-border pb-4">
+              <DialogTitle>Color Hint</DialogTitle>
+            </DialogHeader>
+            <div>
               {targetHsl && (
                 <div className="space-y-8 py-6">
                   {/* Hue */}
                   <div className="space-y-3">
                     <div className="flex items-baseline justify-between">
-                      <span className="text-base font-black uppercase tracking-wide">Hue</span>
-                      <span className="text-3xl font-black tabular-nums">{Math.round(targetHsl.h)}<span className="text-base text-muted-foreground font-bold">°</span></span>
+                      <span className="text-base font-black uppercase tracking-wide">
+                        Hue
+                      </span>
+                      <span className="text-3xl font-black tabular-nums">
+                        {Math.round(targetHsl.h)}
+                        <span className="text-base text-muted-foreground font-bold">
+                          °
+                        </span>
+                      </span>
                     </div>
                     <div className="relative h-12 border border-border shadow-sm">
                       <div
                         className="absolute inset-0"
                         style={{
-                          background: 'linear-gradient(to right, hsl(0, 100%, 50%), hsl(60, 100%, 50%), hsl(120, 100%, 50%), hsl(180, 100%, 50%), hsl(240, 100%, 50%), hsl(300, 100%, 50%), hsl(360, 100%, 50%))',
+                          background:
+                            "linear-gradient(to right, hsl(0, 100%, 50%), hsl(60, 100%, 50%), hsl(120, 100%, 50%), hsl(180, 100%, 50%), hsl(240, 100%, 50%), hsl(300, 100%, 50%), hsl(360, 100%, 50%))",
                         }}
                       />
                       <div
                         className="absolute top-0 bottom-0 w-1 bg-foreground shadow-lg"
-                        style={{ left: `${(targetHsl.h / 360) * 100}%`, transform: 'translateX(-50%)' }}
+                        style={{
+                          left: `${(targetHsl.h / 360) * 100}%`,
+                          transform: "translateX(-50%)",
+                        }}
                       />
                     </div>
                   </div>
@@ -239,8 +488,15 @@ export default function Home() {
                   {/* Saturation */}
                   <div className="space-y-3">
                     <div className="flex items-baseline justify-between">
-                      <span className="text-base font-black uppercase tracking-wide">Saturation</span>
-                      <span className="text-3xl font-black tabular-nums">{Math.round(targetHsl.s)}<span className="text-base text-muted-foreground font-bold">%</span></span>
+                      <span className="text-base font-black uppercase tracking-wide">
+                        Saturation
+                      </span>
+                      <span className="text-3xl font-black tabular-nums">
+                        {Math.round(targetHsl.s)}
+                        <span className="text-base text-muted-foreground font-bold">
+                          %
+                        </span>
+                      </span>
                     </div>
                     <div className="relative h-12 border border-border shadow-sm">
                       <div
@@ -251,7 +507,10 @@ export default function Home() {
                       />
                       <div
                         className="absolute top-0 bottom-0 w-1 bg-foreground shadow-lg"
-                        style={{ left: `${targetHsl.s}%`, transform: 'translateX(-50%)' }}
+                        style={{
+                          left: `${targetHsl.s}%`,
+                          transform: "translateX(-50%)",
+                        }}
                       />
                     </div>
                   </div>
@@ -259,8 +518,15 @@ export default function Home() {
                   {/* Lightness */}
                   <div className="space-y-3">
                     <div className="flex items-baseline justify-between">
-                      <span className="text-base font-black uppercase tracking-wide">Lightness</span>
-                      <span className="text-3xl font-black tabular-nums">{Math.round(targetHsl.l)}<span className="text-base text-muted-foreground font-bold">%</span></span>
+                      <span className="text-base font-black uppercase tracking-wide">
+                        Lightness
+                      </span>
+                      <span className="text-3xl font-black tabular-nums">
+                        {Math.round(targetHsl.l)}
+                        <span className="text-base text-muted-foreground font-bold">
+                          %
+                        </span>
+                      </span>
                     </div>
                     <div className="relative h-12 border border-border shadow-sm">
                       <div
@@ -271,15 +537,18 @@ export default function Home() {
                       />
                       <div
                         className="absolute top-0 bottom-0 w-1 bg-foreground shadow-lg"
-                        style={{ left: `${targetHsl.l}%`, transform: 'translateX(-50%)' }}
+                        style={{
+                          left: `${targetHsl.l}%`,
+                          transform: "translateX(-50%)",
+                        }}
                       />
                     </div>
                   </div>
                 </div>
               )}
-            </ModalBody>
-          </ModalContent>
-        </Modal>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Win/Complete State */}
         {showTarget && gameState.targetColor && (
@@ -297,14 +566,24 @@ export default function Home() {
                   {gameState.targetColor.hex}
                 </p>
                 {gameState.guesses.some((g) => g.similarity === 100) ? (
-                  <div className="mt-4 inline-flex items-center gap-2 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 px-4 py-2 border border-green-300 dark:border-green-700 font-bold">
-                    <span className="text-xl">🎉</span>
-                    Won in {gameState.attempts} guesses!
+                  <div className="mt-4">
+                    <div className="inline-flex items-center gap-2 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 px-3 py-1.5 border border-green-300 dark:border-green-700 font-bold">
+                      <span className="text-xl">🎉</span>
+                      Won in {gameState.attempts} guesses!
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-3">
+                      Come back tomorrow for a new color!
+                    </p>
                   </div>
                 ) : (
-                  <p className="text-base font-semibold text-muted-foreground mt-4">
-                    Better luck tomorrow!
-                  </p>
+                  <div className="mt-4">
+                    <p className="text-base font-semibold text-muted-foreground">
+                      Better luck tomorrow!
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      A new color will be available tomorrow.
+                    </p>
+                  </div>
                 )}
               </div>
             </div>

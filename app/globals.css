@@ -122,8 +122,33 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    transition-duration: 50ms;
+    transition-timing-function: ease-out;
   }
   body {
     @apply bg-background text-foreground;
   }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading), ui-sans-serif, system-ui;
+  }
 }
+
+/* Rainbow hover effect for Colordle title */
+.colordle-letter {
+  display: inline-block;
+  transition: color 0.6s ease-out;
+  cursor: default;
+}
+
+.colordle-letter:hover {
+  transition: color 0.1s ease-in;
+}
+
+.colordle-letter-0:hover { color: #FF0000; } /* Red */
+.colordle-letter-1:hover { color: #FF7F00; } /* Orange */
+.colordle-letter-2:hover { color: #FFFF00; } /* Yellow */
+.colordle-letter-3:hover { color: #00FF00; } /* Green */
+.colordle-letter-4:hover { color: #0000FF; } /* Blue */
+.colordle-letter-5:hover { color: #4B0082; } /* Indigo */
+.colordle-letter-6:hover { color: #9400D3; } /* Violet */
+.colordle-letter-7:hover { color: #FF1493; } /* Pink (for the 'e') */

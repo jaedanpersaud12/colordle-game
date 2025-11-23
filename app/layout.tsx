@@ -1,10 +1,18 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Pirata_One } from "next/font/google";
 import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { TRPCProvider } from "@/lib/trpc/Provider";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 const inter = Inter({
   variable: "--font-sans",
+  subsets: ["latin"],
+});
+
+const pirataOne = Pirata_One({
+  weight: "400",
+  variable: "--font-heading",
   subsets: ["latin"],
 });
 
@@ -21,11 +29,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} antialiased`}
+        className={`${inter.variable} ${pirataOne.variable} antialiased`}
       >
-        <TooltipProvider delayDuration={0}>
-          {children}
-        </TooltipProvider>
+        <TRPCProvider>
+          <ThemeProvider>
+            <TooltipProvider delayDuration={0}>
+              {children}
+            </TooltipProvider>
+          </ThemeProvider>
+        </TRPCProvider>
       </body>
     </html>
   );

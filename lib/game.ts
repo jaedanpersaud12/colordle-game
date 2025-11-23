@@ -99,3 +99,82 @@ export function getDailyColor(colors: Color[]): Color {
   const index = Math.floor(seededRandom(seed) * colors.length);
   return colors[index];
 }
+
+// Get today's date string in YYYY-MM-DD format
+export function getTodayDateString(): string {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
+}
+
+// Daily game state interface
+export interface DailyGameState {
+  gameDate: string;
+  targetColor: Color;
+  guesses: Guess[];
+  isComplete: boolean;
+  attempts: number;
+  won: boolean;
+  gaveUp: boolean;
+}
+
+// Load daily game state from localStorage
+export function loadDailyGameState(gameDate: string): DailyGameState | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const key = `colordle-game-${gameDate}`;
+  const saved = localStorage.getItem(key);
+
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      // Convert timestamp strings back to Date objects
+      parsed.guesses = parsed.guesses.map((g: any) => ({
+        ...g,
+        timestamp: new Date(g.timestamp),
+      }));
+      return parsed;
+    } catch (e) {
+      console.error('Failed to parse saved game state:', e);
+      return null;
+    }
+  }
+
+  return null;
+}
+
+// Save daily game state to localStorage
+export function saveDailyGameState(state: DailyGameState): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const key = `colordle-game-${state.gameDate}`;
+  localStorage.setItem(key, JSON.stringify(state));
+}
+
+// Clear old game states (keep last 7 days)
+export function clearOldGameStates(): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const today = new Date();
+  const keysToRemove: string[] = [];
+
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('colordle-game-')) {
+      const dateStr = key.replace('colordle-game-', '');
+      const gameDate = new Date(dateStr);
+      const daysDiff = Math.floor((today.getTime() - gameDate.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (daysDiff > 7) {
+        keysToRemove.push(key);
+      }
+    }
+  }
+
+  keysToRemove.forEach(key => localStorage.removeItem(key));
+}
