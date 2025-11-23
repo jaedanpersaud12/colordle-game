@@ -74,10 +74,20 @@ export default function Home() {
   const utils = trpc.useUtils();
 
   // Fetch daily color using tRPC hook
-  const { data: dailyColorData } = trpc.game.getDailyColor.useQuery();
+  const {
+    data: dailyColorData,
+    error: dailyColorError,
+    isLoading: dailyColorLoading
+  } = trpc.game.getDailyColor.useQuery(undefined, {
+    retry: 3,
+    retryDelay: 1000,
+  });
 
   // Fetch today's game state from backend (if user is logged in)
-  const { data: backendGameState } = trpc.game.getTodayGameState.useQuery(
+  const {
+    data: backendGameState,
+    error: backendGameStateError
+  } = trpc.game.getTodayGameState.useQuery(
     undefined,
     {
       retry: false,
