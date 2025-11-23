@@ -351,10 +351,43 @@ export default function Home() {
     }
   };
 
-  if (isLoading || !dailyColorData) {
+  // Show error state if daily color fetch fails
+  if (dailyColorError) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-lg">Loading colors...</p>
+      <div className="min-h-screen flex items-center justify-center bg-background p-6">
+        <div className="max-w-md w-full border border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-950 p-8 text-center">
+          <div className="mb-4">
+            <div className="w-16 h-16 mx-auto bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 flex items-center justify-center mb-4">
+              <span className="text-3xl">⚠️</span>
+            </div>
+            <h1 className="text-2xl font-black text-red-800 dark:text-red-400 mb-2">
+              Failed to Load Game
+            </h1>
+            <p className="text-red-700 dark:text-red-300 text-sm mb-4">
+              {dailyColorError.message || "Unable to fetch today's color. Please try again."}
+            </p>
+          </div>
+          <Button
+            onClick={() => window.location.reload()}
+            className="w-full"
+          >
+            Reload Page
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading || dailyColorLoading || !dailyColorData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="animate-pulse mb-4">
+            <div className="w-16 h-16 mx-auto bg-muted border border-border"></div>
+          </div>
+          <p className="text-lg font-semibold">Loading colors...</p>
+          <p className="text-sm text-muted-foreground mt-2">This should only take a moment</p>
+        </div>
       </div>
     );
   }
