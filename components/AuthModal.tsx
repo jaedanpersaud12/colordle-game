@@ -190,6 +190,7 @@ export function AuthModal({ isOpen, onOpenChange }: AuthModalProps) {
                   }}
                   providers={[]}
                   showLinks={false}
+                  redirectTo={`${typeof window !== 'undefined' ? window.location.origin : ''}/onboarding`}
                 />
 
                 {view === "sign_in" && (
