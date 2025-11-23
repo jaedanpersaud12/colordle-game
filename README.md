@@ -1,36 +1,103 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Colordle - Color Guessing Game
+
+A daily color guessing game inspired by Wordle, where you guess a color name from a database of 30,000+ colors.
+
+## Features
+
+- **30,000+ Colors**: Comprehensive color database with unique and creative color names
+- **Smart Help System**: Balanced difficulty with progressive hints
+  - Autocomplete search to discover color names
+  - Color wheel visualization
+  - Hue hints unlock after 3 guesses
+  - Similarity percentage feedback on each guess
+- **Daily Challenge**: New color every day using seeded randomization
+- **Statistics Tracking**: Track your games, win rate, streaks, and guess distribution
+- **Beautiful UI**: Built with Next.js, TypeScript, Tailwind CSS, and shadcn/ui
+
+## How to Play
+
+1. Type a color name in the input field
+2. Select from autocomplete suggestions or press Enter
+3. See how close your guess is (0-100% similarity)
+4. Use the color wheel and your previous guesses to narrow down the target
+5. After 3 guesses, a hint marker appears on the color wheel showing the hue area
+6. Keep guessing until you find the exact color!
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+# Install dependencies
+pnpm install
+
+# Run the development server
 pnpm dev
-# or
-bun dev
+
+# Build for production
+pnpm build
+
+# Start production server
+pnpm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to play.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Game Mechanics
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Similarity Scoring
 
-## Learn More
+Colors are compared using RGB Euclidean distance:
+- **100%**: Exact match (you win!)
+- **95-99%**: Extremely close, almost identical
+- **80-94%**: Very similar, getting warm
+- **60-79%**: Somewhat similar
+- **Below 60%**: Keep exploring
 
-To learn more about Next.js, take a look at the following resources:
+### Help System Design Philosophy
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The game balances challenge with discoverability:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Autocomplete Search**: Helps you discover color names without giving away the answer
+2. **Color Wheel**: Shows the full spectrum, giving spatial context
+3. **Progressive Hints**: After 3 guesses, a marker shows the general hue area
+4. **Sorted Guess History**: Automatically ranks your guesses by similarity
+5. **Contextual Feedback**: Visual and textual cues guide your next guess
 
-## Deploy on Vercel
+This design ensures the game is challenging but not frustrating - you're learning color names while playing!
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Tech Stack
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Framework**: Next.js 16 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS v4
+- **Components**: shadcn/ui
+- **Icons**: Lucide React
+- **State Management**: React Hooks + LocalStorage
+
+## Project Structure
+
+```
+colordle-game/
+├── app/
+│   └── page.tsx              # Main game page
+├── components/
+│   ├── ui/                   # shadcn/ui components
+│   ├── ColorWheel.tsx        # Interactive color wheel with hints
+│   ├── ColorInput.tsx        # Autocomplete color search
+│   ├── GuessHistory.tsx      # Sorted guess list with feedback
+│   ├── HelpDialog.tsx        # Game instructions
+│   └── StatsDialog.tsx       # Player statistics
+├── lib/
+│   ├── colors.ts             # Color utilities and calculations
+│   └── game.ts               # Game logic and state management
+└── public/
+    └── colornames.csv        # 30,000+ color database
+```
+
+## Future Enhancements
+
+- Share results (copy to clipboard)
+- Multiple difficulty modes (fewer/more colors)
+- Hints system (show similar colors)
+- Theme customization
+- Mobile app version
+- Multiplayer mode
