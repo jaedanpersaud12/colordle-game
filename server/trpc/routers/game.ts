@@ -13,14 +13,24 @@ export const gameRouter = router({
   // Get today's daily color
   getDailyColor: publicProcedure.query(async ({ ctx }) => {
     const dateString = getTodayDateString();
+    console.log(`[getDailyColor] Starting query for date: ${dateString}`);
 
     try {
       // Check if we already have a color for today
-      const [existingColor] = await ctx.db
+      console.log(`[getDailyColor] Querying database...`);
+
+      // Add timeout to prevent hanging
+      const queryPromise = ctx.db
         .select()
         .from(dailyColors)
         .where(eq(dailyColors.gameDate, dateString))
         .limit(1);
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Database query timeout after 10s')), 10000)
+      );
+
+      const [existingColor] = await Promise.race([queryPromise, timeoutPromise]) as any;
 
       if (existingColor) {
         console.log(`[getDailyColor] Found existing color for ${dateString}: ${existingColor.colorName}`);
