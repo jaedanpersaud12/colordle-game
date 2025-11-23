@@ -8,11 +8,20 @@ if (!connectionString) {
   throw new Error("DATABASE_URL environment variable is not set");
 }
 
-const client = postgres(connectionString, {
-  max: 10,
-  idle_timeout: 20,
-  connect_timeout: 10,
-  prepare: false,
-});
+// For serverless environments, we want a singleton connection
+// that doesn't use prepared statements
+let client: ReturnType<typeof postgres> | null = null;
 
-export const db = drizzle(client, { schema });
+function getClient() {
+  if (!client) {
+    client = postgres(connectionString, {
+      max: 1, // Serverless works better with fewer connections
+      idle_timeout: 20,
+      connect_timeout: 10,
+      prepare: false, // Disable prepared statements for serverless
+    });
+  }
+  return client;
+}
+
+export const db = drizzle(getClient(), { schema });
