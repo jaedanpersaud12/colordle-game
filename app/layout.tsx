@@ -3,6 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { TRPCProvider } from "@/lib/trpc/Provider";
 import type { Metadata } from "next";
 import { Barlow, Pirata_One } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
 const barlow = Barlow({
@@ -35,6 +36,7 @@ export default function RootLayout({
             <TooltipProvider delayDuration={0}>{children}</TooltipProvider>
           </ThemeProvider>
         </TRPCProvider>
+        <Analytics />
       </body>
     </html>
   );
