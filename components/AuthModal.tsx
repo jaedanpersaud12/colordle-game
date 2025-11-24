@@ -19,7 +19,9 @@ interface AuthModalProps {
 
 export function AuthModal({ isOpen, onOpenChange }: AuthModalProps) {
   const supabase = createClient();
-  const [view, setView] = useState<"sign_in" | "sign_up" | "forgotten_password">("sign_in");
+  const [view, setView] = useState<
+    "sign_in" | "sign_up" | "forgotten_password"
+  >("sign_in");
   const [resetEmail, setResetEmail] = useState("");
   const [resetMessage, setResetMessage] = useState("");
   const [resetError, setResetError] = useState("");
@@ -33,7 +35,7 @@ export function AuthModal({ isOpen, onOpenChange }: AuthModalProps) {
         onOpenChange(false);
         // Redirect to onboarding - the onboarding page will handle
         // redirecting back to home if already completed
-        window.location.href = '/onboarding';
+        window.location.href = "/onboarding";
       }
     });
 
@@ -89,12 +91,16 @@ export function AuthModal({ isOpen, onOpenChange }: AuthModalProps) {
               </button>
 
               <p className="text-sm text-muted-foreground">
-                Enter your email address and we'll send you a link to reset your password.
+                Enter your email address and we'll send you a link to reset your
+                password.
               </p>
 
               <form onSubmit={handlePasswordReset} className="space-y-4">
                 <div className="space-y-2">
-                  <label htmlFor="reset-email" className="text-sm font-bold block">
+                  <label
+                    htmlFor="reset-email"
+                    className="text-sm font-bold block"
+                  >
                     Email Address
                   </label>
                   <div className="relative">
@@ -134,40 +140,40 @@ export function AuthModal({ isOpen, onOpenChange }: AuthModalProps) {
             <div className="space-y-4">
               {/* Tab Buttons */}
               <div className="flex gap-2 border-b border-border">
-              <button
-                type="button"
-                onClick={() => setView("sign_in")}
-                className={`flex-1 pb-3 text-sm font-semibold transition-colors relative flex items-center justify-center gap-2 ${
-                  view === "sign_in"
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <LogIn className="h-4 w-4" />
-                Sign In
-                {view === "sign_in" && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => setView("sign_up")}
-                className={`flex-1 pb-3 text-sm font-semibold transition-colors relative flex items-center justify-center gap-2 ${
-                  view === "sign_up"
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <UserPlus className="h-4 w-4" />
-                Sign Up
-                {view === "sign_up" && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
-                )}
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={() => setView("sign_in")}
+                  className={`flex-1 pb-3 text-sm font-semibold transition-colors relative flex items-center justify-center gap-2 ${
+                    view === "sign_in"
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <LogIn className="h-4 w-4" />
+                  Sign In
+                  {view === "sign_in" && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setView("sign_up")}
+                  className={`flex-1 pb-3 text-sm font-semibold transition-colors relative flex items-center justify-center gap-2 ${
+                    view === "sign_up"
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <UserPlus className="h-4 w-4" />
+                  Sign Up
+                  {view === "sign_up" && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
+                  )}
+                </button>
+              </div>
 
               {/* Auth Form */}
-              <div className="pb-2">
+              <div className="pb-0.5">
                 <Auth
                   supabaseClient={supabase}
                   view={view}
@@ -185,12 +191,15 @@ export function AuthModal({ isOpen, onOpenChange }: AuthModalProps) {
                       button: "!rounded-none !border !border-border",
                       input: "!rounded-none !border !border-border",
                       anchor: "!text-foreground !underline hover:!no-underline",
-                      message: "!text-sm !border !border-border !rounded-none !p-3",
+                      message:
+                        "!text-sm !border !border-border !rounded-none !p-3",
                     },
                   }}
                   providers={[]}
                   showLinks={false}
-                  redirectTo={`${typeof window !== 'undefined' ? window.location.origin : ''}/onboarding`}
+                  redirectTo={`${
+                    typeof window !== "undefined" ? window.location.origin : ""
+                  }/onboarding`}
                 />
 
                 {view === "sign_in" && (
@@ -206,40 +215,34 @@ export function AuthModal({ isOpen, onOpenChange }: AuthModalProps) {
                 )}
               </div>
 
-            {/* Footer Text */}
-            <div className="space-y-3">
-              <div className="flex flex-col items-center gap-2 text-xs text-muted-foreground border-t border-border pt-4 text-center">
-                <Shield className="h-4 w-4 flex-shrink-0" />
-                <p className="leading-relaxed">
-                  Your data is secure and encrypted. We'll never share your information.
+              {/* Footer Text */}
+              <div className="space-y-3">
+                <p className="text-xs text-center text-muted-foreground">
+                  {view === "sign_in" ? (
+                    <>
+                      Don&apos;t have an account?{" "}
+                      <button
+                        type="button"
+                        onClick={() => setView("sign_up")}
+                        className="text-foreground underline hover:no-underline font-semibold"
+                      >
+                        Sign up
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      Already have an account?{" "}
+                      <button
+                        type="button"
+                        onClick={() => setView("sign_in")}
+                        className="text-foreground underline hover:no-underline font-semibold"
+                      >
+                        Sign in
+                      </button>
+                    </>
+                  )}
                 </p>
               </div>
-              <p className="text-xs text-center text-muted-foreground">
-                {view === "sign_in" ? (
-                  <>
-                    Don't have an account?{" "}
-                    <button
-                      type="button"
-                      onClick={() => setView("sign_up")}
-                      className="text-foreground underline hover:no-underline font-semibold"
-                    >
-                      Sign up
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    Already have an account?{" "}
-                    <button
-                      type="button"
-                      onClick={() => setView("sign_in")}
-                      className="text-foreground underline hover:no-underline font-semibold"
-                    >
-                      Sign in
-                    </button>
-                  </>
-                )}
-              </p>
-            </div>
             </div>
           )}
         </div>

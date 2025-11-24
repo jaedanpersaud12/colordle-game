@@ -2,10 +2,10 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TRPCProvider } from "@/lib/trpc/Provider";
 import type { Metadata } from "next";
-import { Petrona, Pirata_One } from "next/font/google";
+import { Barlow, Pirata_One } from "next/font/google";
 import "./globals.css";
 
-const petrona = Petrona({
+const barlow = Barlow({
   variable: "--font-sans",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -29,7 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${petrona.variable} ${pirataOne.variable} antialiased`}>
+      <body className={`${barlow.variable} ${pirataOne.variable} antialiased`}>
         <TRPCProvider>
           <ThemeProvider>
             <TooltipProvider delayDuration={0}>{children}</TooltipProvider>
