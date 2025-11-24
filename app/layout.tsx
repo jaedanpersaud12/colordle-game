@@ -1,13 +1,14 @@
-import type { Metadata } from "next";
-import { Inter, Pirata_One } from "next/font/google";
-import "./globals.css";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TRPCProvider } from "@/lib/trpc/Provider";
-import { ThemeProvider } from "@/components/ThemeProvider";
+import type { Metadata } from "next";
+import { Petrona, Pirata_One } from "next/font/google";
+import "./globals.css";
 
-const inter = Inter({
+const petrona = Petrona({
   variable: "--font-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 const pirataOne = Pirata_One({
@@ -28,14 +29,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${inter.variable} ${pirataOne.variable} antialiased`}
-      >
+      <body className={`${petrona.variable} ${pirataOne.variable} antialiased`}>
         <TRPCProvider>
           <ThemeProvider>
-            <TooltipProvider delayDuration={0}>
-              {children}
-            </TooltipProvider>
+            <TooltipProvider delayDuration={0}>{children}</TooltipProvider>
           </ThemeProvider>
         </TRPCProvider>
       </body>
