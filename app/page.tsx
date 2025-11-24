@@ -26,6 +26,7 @@ import { GuessHistory } from "@/components/GuessHistory";
 import { HelpDialog } from "@/components/HelpDialog";
 import { StatsDialog } from "@/components/StatsDialog";
 import { UserMenu } from "@/components/UserMenu";
+import { GameCompleteDialog } from "@/components/GameCompleteDialog";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -69,6 +70,7 @@ export default function Home() {
   const [debugMode, setDebugMode] = useState(false);
   const [helpDialogOpen, setHelpDialogOpen] = useState(false);
   const [statsDialogOpen, setStatsDialogOpen] = useState(false);
+  const [gameCompleteDialogOpen, setGameCompleteDialogOpen] = useState(false);
 
   const supabase = createClient();
   const utils = trpc.useUtils();
@@ -276,6 +278,11 @@ export default function Home() {
 
     setGameState(newGameState);
 
+    // Show game complete dialog if won
+    if (isWin) {
+      setGameCompleteDialogOpen(true);
+    }
+
     // Save to localStorage
     if (dailyColorData && gameState.targetColor) {
       saveDailyGameState({
@@ -321,6 +328,9 @@ export default function Home() {
 
     setGameState(newGameState);
     setShowTarget(true);
+
+    // Show game complete dialog
+    setGameCompleteDialogOpen(true);
 
     // Save to localStorage and sync to backend
     if (dailyColorData && gameState.targetColor) {
@@ -708,6 +718,18 @@ export default function Home() {
           onOpenChange={setStatsDialogOpen}
         />
       </div>
+
+      {/* Game Complete Dialog */}
+      {dailyColorData && (
+        <GameCompleteDialog
+          isOpen={gameCompleteDialogOpen}
+          onOpenChange={setGameCompleteDialogOpen}
+          gameState={gameState}
+          won={gameState.guesses.some((g) => g.similarity === 100)}
+          gaveUp={gameState.isComplete && !gameState.guesses.some((g) => g.similarity === 100)}
+          dayNumber={dailyColorData.dayNumber}
+        />
+      )}
     </main>
     </SidebarProvider>
   );
