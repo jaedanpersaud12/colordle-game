@@ -10,6 +10,7 @@ import { Color, loadColors } from "@/lib/colors";
 import { getReadableTextColor } from "@/lib/color-utils";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { Check, X, Loader2 } from "lucide-react";
+import { LoadingLogo } from "@/components/LoadingLogo";
 
 // Popular preset colors for quick selection
 const PRESET_COLORS = [
@@ -199,7 +200,12 @@ export default function OnboardingPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-lg">Loading...</div>
+        <div className="text-center">
+          <div className="mb-8">
+            <LoadingLogo />
+          </div>
+          <p className="text-lg font-semibold">Setting up your profile...</p>
+        </div>
       </div>
     );
   }
