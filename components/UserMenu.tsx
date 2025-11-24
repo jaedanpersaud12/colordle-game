@@ -63,17 +63,10 @@ export function UserMenu({ onSignInClick }: UserMenuProps = {}) {
   if (!user) {
     return (
       <>
-        <Button
-          onClick={handleSignInClick}
-          variant="outline"
-          size="sm"
-        >
+        <Button onClick={handleSignInClick} variant="outline" size="sm">
           Sign In
         </Button>
-        <AuthModal
-          isOpen={showAuthModal}
-          onOpenChange={setShowAuthModal}
-        />
+        <AuthModal isOpen={showAuthModal} onOpenChange={setShowAuthModal} />
       </>
     );
   }
@@ -94,7 +87,7 @@ export function UserMenu({ onSignInClick }: UserMenuProps = {}) {
                   }
                 : undefined
             }
-            className="font-bold gap-1"
+            className="font-bold gap-1 border border-b"
           >
             @{dbUser?.username || "user"}
             <ChevronDown className="w-3.5 h-3.5 translate-y-[1.5px]" />
@@ -105,7 +98,9 @@ export function UserMenu({ onSignInClick }: UserMenuProps = {}) {
             {dbUser?.username && (
               <p className="font-bold text-sm mb-0.5">@{dbUser.username}</p>
             )}
-            <p className="text-muted-foreground truncate text-xs leading-relaxed">{user.email}</p>
+            <p className="text-muted-foreground truncate text-xs leading-relaxed">
+              {user.email}
+            </p>
           </div>
           <DropdownMenuSeparator className="my-0" />
           <div className="p-1">

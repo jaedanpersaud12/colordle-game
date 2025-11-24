@@ -38,7 +38,7 @@ export function GuessHistory({ guesses }: GuessHistoryProps) {
             <div className="flex items-center gap-3 sm:gap-4 p-3 pl-5">
               {/* Large color swatch */}
               <div
-                className="w-14 h-14 sm:w-20 sm:h-20 border border-border flex-shrink-0 shadow-sm"
+                className="w-14 h-14 sm:w-20 sm:h-20 border border-border flex-shrink-0"
                 style={{ backgroundColor: guess.color.hex }}
               />
 

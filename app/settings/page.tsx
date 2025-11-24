@@ -309,7 +309,7 @@ export default function SettingsPage() {
 
                     {/* Search Results */}
                     {filteredColors.length > 0 && (
-                      <div className="absolute z-50 w-full mb-2 bottom-full bg-card border border-border shadow-2xl overflow-hidden">
+                      <div className="absolute z-50 w-full mb-2 bottom-full bg-card border border-border overflow-hidden">
                         <div className="max-h-48 overflow-y-auto">
                           <div className="grid grid-cols-1 gap-1 p-2">
                             {filteredColors.slice(0, 10).map((color) => (

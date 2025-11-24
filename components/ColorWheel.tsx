@@ -125,7 +125,7 @@ export function ColorWheel({
         ref={canvasRef}
         width={size}
         height={size}
-        className="rounded-full shadow-xl"
+        className="rounded-full"
       />
       {showHint && (
         <Button

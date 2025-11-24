@@ -610,7 +610,7 @@ export default function Home() {
                         </span>
                       </span>
                     </div>
-                    <div className="relative h-10 sm:h-12 border border-border shadow-sm">
+                    <div className="relative h-10 sm:h-12 border border-border">
                       <div
                         className="absolute inset-0"
                         style={{
@@ -619,7 +619,7 @@ export default function Home() {
                         }}
                       />
                       <div
-                        className="absolute top-0 bottom-0 w-1 bg-foreground shadow-lg"
+                        className="absolute top-0 bottom-0 w-1 bg-foreground"
                         style={{
                           left: `${(targetHsl.h / 360) * 100}%`,
                           transform: "translateX(-50%)",
@@ -641,7 +641,7 @@ export default function Home() {
                         </span>
                       </span>
                     </div>
-                    <div className="relative h-10 sm:h-12 border border-border shadow-sm">
+                    <div className="relative h-10 sm:h-12 border border-border">
                       <div
                         className="absolute inset-0"
                         style={{
@@ -649,7 +649,7 @@ export default function Home() {
                         }}
                       />
                       <div
-                        className="absolute top-0 bottom-0 w-1 bg-foreground shadow-lg"
+                        className="absolute top-0 bottom-0 w-1 bg-foreground"
                         style={{
                           left: `${targetHsl.s}%`,
                           transform: "translateX(-50%)",
@@ -671,7 +671,7 @@ export default function Home() {
                         </span>
                       </span>
                     </div>
-                    <div className="relative h-10 sm:h-12 border border-border shadow-sm">
+                    <div className="relative h-10 sm:h-12 border border-border">
                       <div
                         className="absolute inset-0"
                         style={{
@@ -679,7 +679,7 @@ export default function Home() {
                         }}
                       />
                       <div
-                        className="absolute top-0 bottom-0 w-1 bg-foreground shadow-lg"
+                        className="absolute top-0 bottom-0 w-1 bg-foreground"
                         style={{
                           left: `${targetHsl.l}%`,
                           transform: "translateX(-50%)",
@@ -698,7 +698,7 @@ export default function Home() {
           <div className="flex-shrink-0 p-4 sm:p-6 bg-card border border-border">
             <div className="flex items-center gap-4 sm:gap-6">
               <div
-                className="w-20 h-20 sm:w-32 sm:h-32 border border-border shadow-lg flex-shrink-0"
+                className="w-20 h-20 sm:w-32 sm:h-32 border border-border flex-shrink-0"
                 style={{ backgroundColor: gameState.targetColor.hex }}
               />
               <div className="flex-1 min-w-0">

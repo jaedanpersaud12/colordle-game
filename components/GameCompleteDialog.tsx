@@ -194,7 +194,7 @@ export function GameCompleteDialog({
           <div className="w-full space-y-3">
             <Button
               onClick={handleCopy}
-              className="w-full h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all"
+              className="w-full h-12 text-base font-semibold transition-all"
               size="lg"
             >
               {copied ? (

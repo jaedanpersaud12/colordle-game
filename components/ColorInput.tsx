@@ -123,7 +123,7 @@ export function ColorInput({ colors, onGuess, disabled, guessedColors }: ColorIn
       </form>
 
       {filteredColors.length > 0 && (
-        <div className="absolute z-50 w-full mt-2 bg-card border border-border shadow-2xl overflow-hidden">
+        <div className="absolute z-50 w-full mt-2 bg-card border border-border overflow-hidden">
           <div className="p-3 bg-muted border-b border-border text-base font-bold">
             {filteredColors.length} color
             {filteredColors.length !== 1 ? "s" : ""} found
