@@ -27,6 +27,7 @@ import { HelpDialog } from "@/components/HelpDialog";
 import { StatsDialog } from "@/components/StatsDialog";
 import { UserMenu } from "@/components/UserMenu";
 import { GameCompleteDialog } from "@/components/GameCompleteDialog";
+import { LoadingLogo } from "@/components/LoadingLogo";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -320,6 +321,32 @@ export default function Home() {
     }
   };
 
+  // Debug function to reset game with new random color (localhost only)
+  const handleDebugReset = () => {
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+      return; // Only allow on localhost
+    }
+
+    if (colors.length === 0) return;
+
+    // Pick a random color
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+    // Reset game state
+    const newGameState = {
+      targetColor: randomColor,
+      guesses: [],
+      isComplete: false,
+      attempts: 0,
+    };
+
+    setGameState(newGameState);
+    setShowTarget(false);
+    setGameCompleteDialogOpen(false);
+
+    console.log('[DEBUG] New game started with color:', randomColor.name, randomColor.hex);
+  };
+
   const handleGiveUp = () => {
     const newGameState = {
       ...gameState,
@@ -392,8 +419,8 @@ export default function Home() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="animate-pulse mb-4">
-            <div className="w-16 h-16 mx-auto bg-muted border border-border"></div>
+          <div className="mb-8">
+            <LoadingLogo />
           </div>
           <p className="text-lg font-semibold">Loading colors...</p>
           <p className="text-sm text-muted-foreground mt-2">This should only take a moment</p>
@@ -449,10 +476,21 @@ export default function Home() {
               )}
             </div>
             {debugMode && gameState.targetColor && (
-              <p className="text-xs font-mono text-yellow-600 dark:text-yellow-500 mt-1 truncate">
-                DEBUG: {gameState.targetColor.name} ({gameState.targetColor.hex}
-                )
-              </p>
+              <div className="flex items-center gap-2 mt-2">
+                <p className="text-xs font-mono text-yellow-600 dark:text-yellow-500 truncate">
+                  DEBUG: {gameState.targetColor.name} ({gameState.targetColor.hex})
+                </p>
+                {typeof window !== 'undefined' && window.location.hostname === 'localhost' && (
+                  <Button
+                    onClick={handleDebugReset}
+                    variant="outline"
+                    size="sm"
+                    className="h-6 px-2 text-xs bg-yellow-600 text-white border-yellow-600 hover:bg-yellow-700 hover:text-white"
+                  >
+                    New Color
+                  </Button>
+                )}
+              </div>
             )}
           </div>
           <div className="flex gap-1 sm:gap-2 flex-shrink-0">
