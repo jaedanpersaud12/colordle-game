@@ -195,7 +195,7 @@ export function AuthModal({ isOpen, onOpenChange }: AuthModalProps) {
                         "!text-sm !border !border-border !rounded-none !p-3",
                     },
                   }}
-                  providers={[]}
+                  providers={["google"]}
                   showLinks={false}
                   redirectTo={`${
                     typeof window !== "undefined" ? window.location.origin : ""
