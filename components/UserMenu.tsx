@@ -87,7 +87,7 @@ export function UserMenu({ onSignInClick }: UserMenuProps = {}) {
                   }
                 : undefined
             }
-            className="font-bold gap-1 border border-b"
+            className="font-bold gap-1"
           >
             @{dbUser?.username || "user"}
             <ChevronDown className="w-3.5 h-3.5 translate-y-[1.5px]" />
@@ -106,7 +106,7 @@ export function UserMenu({ onSignInClick }: UserMenuProps = {}) {
           <div className="p-1">
             <DropdownMenuItem
               asChild
-              className="cursor-pointer text-sm py-2 px-3 rounded-sm"
+              className="cursor-pointer text-sm py-2 px-3 "
             >
               <a href="/settings" className="flex items-center">
                 <Settings className="w-4 h-4 mr-3" />
@@ -115,7 +115,7 @@ export function UserMenu({ onSignInClick }: UserMenuProps = {}) {
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={handleSignOut}
-              className="cursor-pointer text-sm py-2 px-3 rounded-sm text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/50"
+              className="cursor-pointer text-sm py-2 px-3  text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/50"
             >
               <LogOut className="w-4 h-4 mr-3" />
               Sign Out

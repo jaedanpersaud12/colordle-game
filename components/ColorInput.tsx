@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useState,
-  useMemo,
-  useRef,
-  useCallback,
-  useEffect,
-} from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { Color } from "@/lib/colors";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -18,7 +12,12 @@ interface ColorInputProps {
   guessedColors: Color[];
 }
 
-export function ColorInput({ colors, onGuess, disabled, guessedColors }: ColorInputProps) {
+export function ColorInput({
+  colors,
+  onGuess,
+  disabled,
+  guessedColors,
+}: ColorInputProps) {
   const [input, setInput] = useState("");
   const [debouncedInput, setDebouncedInput] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -123,7 +122,7 @@ export function ColorInput({ colors, onGuess, disabled, guessedColors }: ColorIn
       </form>
 
       {filteredColors.length > 0 && (
-        <div className="absolute z-50 w-full mt-2 bg-card border border-border overflow-hidden">
+        <div className="absolute z-50  w-full mt-2 bg-card border border-border overflow-hidden">
           <div className="p-3 bg-muted border-b border-border text-base font-bold">
             {filteredColors.length} color
             {filteredColors.length !== 1 ? "s" : ""} found
@@ -138,7 +137,7 @@ export function ColorInput({ colors, onGuess, disabled, guessedColors }: ColorIn
                   key={`${color.name}-${color.hex}`}
                   type="button"
                   onClick={() => handleColorClick(color)}
-                  className={`text-left p-3 transition-all ${
+                  className={`text-left hover:scale-[1.005] cursor-pointer p-3 transition-all ${
                     index === selectedIndex
                       ? "bg-background border-2 border-foreground"
                       : "bg-background border border-border hover:border-foreground/30"
