@@ -199,7 +199,7 @@ export function AuthModal({ isOpen, onOpenChange }: AuthModalProps) {
                   showLinks={false}
                   redirectTo={`${
                     typeof window !== "undefined" ? window.location.origin : ""
-                  }/onboarding`}
+                  }/auth/callback`}
                 />
 
                 {view === "sign_in" && (
