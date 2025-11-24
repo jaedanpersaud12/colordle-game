@@ -70,7 +70,7 @@ export function AuthModal({ isOpen, onOpenChange }: AuthModalProps) {
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader className="border-b border-border pb-4">
-          <DialogTitle>
+          <DialogTitle className="transition-all duration-200">
             {view === "forgotten_password"
               ? "Reset Your Password"
               : view === "sign_in"
@@ -80,13 +80,13 @@ export function AuthModal({ isOpen, onOpenChange }: AuthModalProps) {
         </DialogHeader>
         <div>
           {view === "forgotten_password" ? (
-            <div className="space-y-4 py-4">
+            <div className="space-y-4 py-4 animate-in fade-in slide-in-from-right-2 duration-200">
               <button
                 type="button"
                 onClick={() => setView("sign_in")}
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-all hover:gap-3"
               >
-                <ArrowLeft className="w-4 h-4" />
+                <ArrowLeft className="w-4 h-4 transition-transform" />
                 Back to sign in
               </button>
 
@@ -104,76 +104,76 @@ export function AuthModal({ isOpen, onOpenChange }: AuthModalProps) {
                     Email Address
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-colors" />
                     <input
                       id="reset-email"
                       type="email"
                       value={resetEmail}
                       onChange={(e) => setResetEmail(e.target.value)}
                       placeholder="you@example.com"
-                      className="w-full pl-10 pr-3 py-2 border border-border bg-background text-foreground rounded-none focus:outline-none focus:ring-2 focus:ring-ring"
+                      className="w-full pl-10 pr-3 py-2 border border-border bg-background text-foreground rounded-none focus:outline-none focus:ring-2 focus:ring-ring transition-all"
                     />
                   </div>
                 </div>
 
                 {resetError && (
-                  <div className="p-3 bg-red-50 dark:bg-red-950 border border-red-300 dark:border-red-700 text-red-800 dark:text-red-400 text-sm">
+                  <div className="p-3 bg-red-50 dark:bg-red-950 border border-red-300 dark:border-red-700 text-red-800 dark:text-red-400 text-sm animate-in fade-in slide-in-from-top-1 duration-200">
                     {resetError}
                   </div>
                 )}
 
                 {resetMessage && (
-                  <div className="p-3 bg-green-50 dark:bg-green-950 border border-green-300 dark:border-green-700 text-green-800 dark:text-green-400 text-sm">
+                  <div className="p-3 bg-green-50 dark:bg-green-950 border border-green-300 dark:border-green-700 text-green-800 dark:text-green-400 text-sm animate-in fade-in slide-in-from-top-1 duration-200">
                     {resetMessage}
                   </div>
                 )}
 
                 <button
                   type="submit"
-                  className="w-full py-2 px-4 bg-foreground text-background font-semibold border border-border hover:opacity-90 transition-opacity"
+                  className="w-full py-2 px-4 bg-foreground text-background font-semibold border border-border hover:opacity-90 transition-all active:scale-[0.98]"
                 >
                   Send Reset Link
                 </button>
               </form>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-4 animate-in fade-in duration-200">
               {/* Tab Buttons */}
               <div className="flex gap-2 border-b border-border">
                 <button
                   type="button"
                   onClick={() => setView("sign_in")}
-                  className={`flex-1 pb-3 text-sm font-semibold transition-colors relative flex items-center justify-center gap-2 ${
+                  className={`flex-1 pb-3 text-sm font-semibold transition-all relative flex items-center justify-center gap-2 ${
                     view === "sign_in"
                       ? "text-foreground"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  <LogIn className="h-4 w-4" />
+                  <LogIn className="h-4 w-4 transition-transform group-hover:scale-110" />
                   Sign In
                   {view === "sign_in" && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground animate-in slide-in-from-left duration-200" />
                   )}
                 </button>
                 <button
                   type="button"
                   onClick={() => setView("sign_up")}
-                  className={`flex-1 pb-3 text-sm font-semibold transition-colors relative flex items-center justify-center gap-2 ${
+                  className={`flex-1 pb-3 text-sm font-semibold transition-all relative flex items-center justify-center gap-2 ${
                     view === "sign_up"
                       ? "text-foreground"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  <UserPlus className="h-4 w-4" />
+                  <UserPlus className="h-4 w-4 transition-transform group-hover:scale-110" />
                   Sign Up
                   {view === "sign_up" && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground animate-in slide-in-from-left duration-200" />
                   )}
                 </button>
               </div>
 
               {/* Auth Form */}
-              <div className="pb-0.5">
+              <div className="pb-0.5 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <Auth
                   supabaseClient={supabase}
                   view={view}
@@ -207,7 +207,7 @@ export function AuthModal({ isOpen, onOpenChange }: AuthModalProps) {
                     <button
                       type="button"
                       onClick={() => setView("forgotten_password")}
-                      className="text-sm text-muted-foreground hover:text-foreground underline"
+                      className="text-sm text-muted-foreground hover:text-foreground underline transition-all"
                     >
                       Forgot password?
                     </button>
@@ -224,7 +224,7 @@ export function AuthModal({ isOpen, onOpenChange }: AuthModalProps) {
                       <button
                         type="button"
                         onClick={() => setView("sign_up")}
-                        className="text-foreground underline hover:no-underline font-semibold"
+                        className="text-foreground underline hover:no-underline font-semibold transition-all"
                       >
                         Sign up
                       </button>
@@ -235,7 +235,7 @@ export function AuthModal({ isOpen, onOpenChange }: AuthModalProps) {
                       <button
                         type="button"
                         onClick={() => setView("sign_in")}
-                        className="text-foreground underline hover:no-underline font-semibold"
+                        className="text-foreground underline hover:no-underline font-semibold transition-all"
                       >
                         Sign in
                       </button>

@@ -402,7 +402,8 @@ export default function SettingsPage() {
             <Button
               type="submit"
               className="w-full"
-              disabled={isSubmitting || !username || !selectedColor}
+              loading={isSubmitting}
+              disabled={!username || !selectedColor}
               style={
                 selectedColor
                   ? {

@@ -181,7 +181,8 @@ export default function ResetPasswordPage() {
             <Button
               type="submit"
               className="w-full"
-              disabled={isLoading || !password || !confirmPassword}
+              loading={isLoading}
+              disabled={!password || !confirmPassword}
             >
               {isLoading ? "Resetting..." : "Reset Password"}
             </Button>
