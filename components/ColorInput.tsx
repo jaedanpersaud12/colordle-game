@@ -3,9 +3,9 @@
 import {
   useState,
   useMemo,
-  useDeferredValue,
   useRef,
   useCallback,
+  useEffect,
 } from "react";
 import { Color } from "@/lib/colors";
 import { Input } from "@/components/ui/input";
@@ -20,11 +20,18 @@ interface ColorInputProps {
 
 export function ColorInput({ colors, onGuess, disabled, guessedColors }: ColorInputProps) {
   const [input, setInput] = useState("");
+  const [debouncedInput, setDebouncedInput] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Defer the input value for expensive filtering operations
-  const deferredInput = useDeferredValue(input);
+  // Debounce the input to wait for user to finish typing
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setDebouncedInput(input);
+    }, 300); // Wait 300ms after user stops typing
+
+    return () => clearTimeout(timeoutId);
+  }, [input]);
 
   // Create a set of guessed color hex values for fast lookup
   const guessedHexes = useMemo(
@@ -33,8 +40,8 @@ export function ColorInput({ colors, onGuess, disabled, guessedColors }: ColorIn
   );
 
   const filteredColors = useMemo(() => {
-    if (!deferredInput.trim()) return [];
-    const searchTerm = deferredInput.toLowerCase();
+    if (!debouncedInput.trim()) return [];
+    const searchTerm = debouncedInput.toLowerCase();
 
     // Filter out already guessed colors
     const availableColors = colors.filter(
@@ -54,7 +61,7 @@ export function ColorInput({ colors, onGuess, disabled, guessedColors }: ColorIn
     );
 
     return [...startsWithResults, ...containsResults];
-  }, [deferredInput, colors, guessedHexes]);
+  }, [debouncedInput, colors, guessedHexes]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,7 +87,7 @@ export function ColorInput({ colors, onGuess, disabled, guessedColors }: ColorIn
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Update input immediately - useDeferredValue will handle the deferral
+    // Update input immediately for responsive typing
     setInput(value);
     setSelectedIndex(-1);
   };
